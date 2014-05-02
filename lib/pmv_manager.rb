@@ -23,9 +23,9 @@ module PmvManager
     end
     def send(command)
       packaged_command = package(command)
-      @socket.send packaged_command, 0#, @ip, @pmv_port
-      # resp, address = @socket.recvfrom PmvManager::MAX_PACKET_SIZE
-      # puts resp
+      @socket.send packaged_command, 0
+      resp, address = @socket.recvfrom PmvManager::MAX_PACKET_SIZE
+      puts resp
     end
     def package(command)
       p = ("\x02#{[@pmv_address.to_s(16)].pack("H*")}#{command.definition}\x03").unpack("C*")
@@ -57,6 +57,12 @@ module PmvManager
   class TestCommand < WriteCommand
     def initialize()
       super("T")
+    end
+  end
+
+  class WriteMessageCommand < WriteCommand
+    def initialize(message)
+      super("I0007001" + message + "\x0D")
     end
   end
 
