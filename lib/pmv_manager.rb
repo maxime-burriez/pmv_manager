@@ -70,6 +70,12 @@ module PmvManager
     end
   end
 
+  class InitPageCommand < WriteCommand
+    def initialize
+      super("F07255000000000000")
+    end
+  end
+
   class WriteMessageCommand < WriteCommand
     def initialize(message)
       super("I0007000" + message + "\x0D")
