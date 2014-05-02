@@ -28,7 +28,7 @@ module PmvManager
       socket = UDPSocket.new
       socket.send packaged_command, 0, @pmv_ip, @pmv_port
       # resp, address = @socket.recvfrom PmvManager::MAX_PACKET_SIZE
-      resp, address = socket.recvfrom PmvManager::MAX_PACKET_SIZE
+      resp, _ = socket.recvfrom PmvManager::MAX_PACKET_SIZE
       puts resp
     end
     def package(command)
@@ -72,7 +72,7 @@ module PmvManager
 
   class WriteMessageCommand < WriteCommand
     def initialize(message)
-      super("I0007001" + message + "\x0D")
+      super("I0007000" + message + "\x0D")
     end
   end
 
