@@ -55,8 +55,14 @@ module PmvManager
   end
 
   class TestCommand < WriteCommand
-    def initialize()
+    def initialize
       super("T")
+    end
+  end
+
+  class SetToForceModeCommand < WriteCommand
+    def initialize
+      super("B1")
     end
   end
 
