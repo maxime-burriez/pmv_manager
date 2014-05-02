@@ -8,23 +8,27 @@ module PmvManager
   RESPONSE_TIMEOUT = 1000
   PMV_DEFAULT_PORT = 10
 
-  class InvalidPacketSize < StandardError; end
+  class Error < StandardError; end
+  class InvalidPacketSize < Error; end
 
   class Client
     def initialize(pmv_address, pmv_ip, pmv_port=PmvManager::PMV_DEFAULT_PORT)
       @pmv_address = pmv_address # integer
       @pmv_ip = pmv_ip           # string
       @pmv_port = pmv_port       # integer
-      @socket = UDPSocket.new    # UDPSocket
-      @socket.connect @pmv_ip, @pmv_port
+      # @socket = UDPSocket.new    # UDPSocket
+      # @socket.connect @pmv_ip, @pmv_port
     end
-    def socket
-      @socket
-    end
+    # def socket
+    #   @socket
+    # end
     def send(command)
       packaged_command = package(command)
-      @socket.send packaged_command, 0
-      resp, address = @socket.recvfrom PmvManager::MAX_PACKET_SIZE
+      # @socket.send packaged_command, 0
+      socket = UDPSocket.new
+      socket.send packaged_command, 0, @pmv_ip, @pmv_port
+      # resp, address = @socket.recvfrom PmvManager::MAX_PACKET_SIZE
+      resp, address = socket.recvfrom PmvManager::MAX_PACKET_SIZE
       puts resp
     end
     def package(command)
