@@ -20,6 +20,7 @@ module PmvManager
     def send(command)
       packaged_command = package(command)
       @socket.send packaged_command, 0, @ip, @pmv_port
+      @socket.recv PmvManager::MAX_PACKET_SIZE
     end
     def package(command)
       p = ("\x02#{[@pmv_address.to_s(16)].pack("H*")}#{command.definition}\x03").unpack("C*")
