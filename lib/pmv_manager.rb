@@ -16,13 +16,14 @@ module PmvManager
       @pmv_ip = pmv_ip           # string
       @pmv_port = pmv_port       # integer
       @socket = UDPSocket.new    # UDPSocket
+      @socket.connect @pmv_ip, @pmv_port
     end
     def socket
       @socket
     end
     def send(command)
       packaged_command = package(command)
-      @socket.send packaged_command, 0, @ip, @pmv_port
+      @socket.send packaged_command, 0#, @ip, @pmv_port
       # resp, address = @socket.recvfrom PmvManager::MAX_PACKET_SIZE
       # puts resp
     end
