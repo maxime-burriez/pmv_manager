@@ -17,10 +17,13 @@ module PmvManager
       @pmv_port = pmv_port       # integer
       @socket = UDPSocket.new    # UDPSocket
     end
+    def socket
+      @socket
+    end
     def send(command)
       packaged_command = package(command)
       @socket.send packaged_command, 0, @ip, @pmv_port
-      @socket.recv PmvManager::MAX_PACKET_SIZE
+      # @socket.recv PmvManager::MAX_PACKET_SIZE
     end
     def package(command)
       p = ("\x02#{[@pmv_address.to_s(16)].pack("H*")}#{command.definition}\x03").unpack("C*")
