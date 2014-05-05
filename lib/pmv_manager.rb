@@ -26,20 +26,15 @@ module PmvManager
       @pmv_address = pmv_address # integer
       @pmv_ip = pmv_ip           # string
       @pmv_port = pmv_port       # integer
-      # @socket = UDPSocket.new    # UDPSocket
-      # @socket.connect @pmv_ip, @pmv_port
     end
-    # def socket
-    #   @socket
-    # end
     def send(command)
       packaged_command = package(command)
-      # @socket.send packaged_command, 0
       socket = UDPSocket.new
       socket.send packaged_command, 0, @pmv_ip, @pmv_port
-      # resp, address = @socket.recvfrom PmvManager::MAX_PACKET_SIZE
       resp, _ = socket.recvfrom PmvManager::MAX_PACKET_SIZE
       puts resp
+      
+      resp
     end
     def xor(unpacked_command)
       unpacked_command << unpacked_command.inject(0) { |s, c| s ^ c }
@@ -74,6 +69,28 @@ module PmvManager
   class GetModeCommand < ReadCommand
     def initialize
       super("B")
+    end
+  end
+
+  class GetMessageCommand < ReadCommand
+    def initialize
+      controle = "I"
+      if (0..9).to_a.include? options[:row_index]
+        controle += options[:row_index].to_s.rjust(2, "0")
+      else
+        raise PmvManager::InvalidRowIndex
+      end
+      if (0..8).to_a.include? options[:message_index]
+        controle += options[:message_index].to_s.rjust(2, "0")
+      else
+        raise PmvManager::InvalidMessageIndex
+      end
+      if (0..4).to_a.include? options[:page_index]
+        controle += options[:page_index].to_s.rjust(2, "0")
+      else
+        raise PmvManager::InvalidPageIndex
+      end
+      super(controle)
     end
   end
 
