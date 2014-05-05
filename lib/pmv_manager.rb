@@ -73,7 +73,7 @@ module PmvManager
   end
 
   class GetMessageCommand < ReadCommand
-    def initialize
+    def initialize options
       controle = "I"
       if (0..9).to_a.include? options[:row_index]
         controle += options[:row_index].to_s.rjust(2, "0")
