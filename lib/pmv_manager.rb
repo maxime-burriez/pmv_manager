@@ -33,17 +33,14 @@ module PmvManager
       socket.send packaged_command, 0, @pmv_ip, @pmv_port
       resp, _ = socket.recvfrom PmvManager::MAX_PACKET_SIZE
       puts resp
-      
+
       resp
     end
     def xor(unpacked_command)
       unpacked_command << unpacked_command.inject(0) { |s, c| s ^ c }
     end
     def package(command)
-      p = (PmvManager::STX +
-        [@pmv_address.to_s(16)].pack("H*") +
-        command.controle +
-        PmvManager::ETX).unpack("C*")
+      p = (PmvManager::STX + [@pmv_address.to_s(16)].pack("H*") + command.controle + PmvManager::ETX).unpack("C*")
       packaged_command = (xor p).pack("C*")
       if packaged_command.length > PmvManager::MAX_PACKET_SIZE
         raise PmvManager::InvalidPacketSize
