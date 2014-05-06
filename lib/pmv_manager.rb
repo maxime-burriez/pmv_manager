@@ -32,6 +32,7 @@ module PmvManager
     def send(command)
       packaged_command = package(command)
       socket = UDPSocket.new
+      resp = nil
       begin 
         status = Timeout::timeout(PmvManager::RESPONSE_TIMEOUT/1000) {
           socket.send packaged_command, 0, @pmv_ip, @pmv_port
