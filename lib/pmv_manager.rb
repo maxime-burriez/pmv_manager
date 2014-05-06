@@ -1,6 +1,7 @@
 require "pmv_manager/version"
 
 require "socket"
+require 'timeout'
 
 module PmvManager
 
@@ -13,6 +14,7 @@ module PmvManager
   STYLES           = { normal: "0", blinking: "1", bold: "2" }
 
   class Error               < StandardError; end
+  class TimeoutError        < Error; end
   class InvalidPacketSize   < Error; end
   class InvalidMode         < Error; end
   class InvalidPageDuration < Error; end
@@ -30,8 +32,14 @@ module PmvManager
     def send(command)
       packaged_command = package(command)
       socket = UDPSocket.new
-      socket.send packaged_command, 0, @pmv_ip, @pmv_port
-      resp, _ = socket.recvfrom PmvManager::MAX_PACKET_SIZE
+      begin 
+        status = Timeout::timeout(PmvManager::RESPONSE_TIMEOUT/1000) {
+          socket.send packaged_command, 0, @pmv_ip, @pmv_port
+          resp, _ = socket.recvfrom PmvManager::MAX_PACKET_SIZE
+        }
+      rescue Timeout::Error
+        raise PmvManager::TimeoutError
+      end
       puts resp
 
       resp
@@ -40,7 +48,10 @@ module PmvManager
       unpacked_command << unpacked_command.inject(0) { |s, c| s ^ c }
     end
     def package(command)
-      p = (PmvManager::STX + [@pmv_address.to_s(16)].pack("H*") + command.controle + PmvManager::ETX).unpack("C*")
+      p = (PmvManager::STX +
+        [@pmv_address.to_s(16)].pack("H*") +
+        command.controle +
+        PmvManager::ETX).unpack("C*")
       packaged_command = (xor p).pack("C*")
       if packaged_command.length > PmvManager::MAX_PACKET_SIZE
         raise PmvManager::InvalidPacketSize
