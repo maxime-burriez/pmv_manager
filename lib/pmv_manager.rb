@@ -5,9 +5,11 @@ require 'timeout'
 
 module PmvManager
 
+  PMV_DEFAULT_PORT = 10
   MAX_PACKET_SIZE  = 128 # 128 octets
   RESPONSE_TIMEOUT = 1000
-  PMV_DEFAULT_PORT = 10
+  NAK              = "\x15\x15\x15\x15\x15" # false
+  ACK              = "\x06\x06\x06\x06\x06" # true
   STX              = "\x02"
   ETX              = "\x03"
   MODES            = { automatic: "0", force: "1", off: "2" }
@@ -24,34 +26,45 @@ module PmvManager
   class InvalidStyle        < Error; end
 
   class Client
+    attr_reader :pmv_address, :pmv_ip, :pmv_port
     def initialize(pmv_address, pmv_ip, pmv_port=PmvManager::PMV_DEFAULT_PORT)
       @pmv_address = pmv_address # integer
       @pmv_ip = pmv_ip           # string
       @pmv_port = pmv_port       # integer
     end
     def send(command)
-      packaged_command = package(command)
+      command.send(self)
+    end
+  end
+
+  class Command
+    attr_reader :controle
+    def initialize(controle)
+      @controle = controle
+    end
+    def send(client)
+      packaged_command = package(client.pmv_address)
       socket = UDPSocket.new
       resp = nil
-      begin 
-        status = Timeout::timeout(PmvManager::RESPONSE_TIMEOUT/1000) {
-          socket.send packaged_command, 0, @pmv_ip, @pmv_port
+      begin
+        Timeout::timeout(PmvManager::RESPONSE_TIMEOUT/1000) {
+          socket.send packaged_command, 0, client.pmv_ip, client.pmv_port
           resp, _ = socket.recvfrom PmvManager::MAX_PACKET_SIZE
         }
       rescue Timeout::Error
         raise PmvManager::TimeoutError
       end
-      puts resp
-
-      resp
+      json_resp = resp_to_json(resp)
+      puts json_resp
+      json_resp
     end
     def xor(unpacked_command)
       unpacked_command << unpacked_command.inject(0) { |s, c| s ^ c }
     end
-    def package(command)
+    def package(pmv_address)
       p = (PmvManager::STX +
-        [@pmv_address.to_s(16)].pack("H*") +
-        command.controle +
+        [pmv_address.to_s(16)].pack("H*") +
+        @controle +
         PmvManager::ETX).unpack("C*")
       packaged_command = (xor p).pack("C*")
       if packaged_command.length > PmvManager::MAX_PACKET_SIZE
@@ -60,12 +73,13 @@ module PmvManager
         packaged_command
       end
     end
-  end
-
-  class Command
-    attr_reader :controle
-    def initialize(controle)
-      @controle = controle
+    def resp_to_json(resp)
+      case resp
+      when PmvManager::NAK
+        { status: false }
+      when PmvManager::ACK
+        { status: true }
+      end
     end
   end
 
@@ -78,6 +92,10 @@ module PmvManager
   class GetModeCommand < ReadCommand
     def initialize
       super("B")
+    end
+    def resp_to_json(resp)
+      mode = PmvManager::MODES.key ([resp.unpack("C*")[4]].pack("C*"))
+      { mode: mode }
     end
   end
 
@@ -100,6 +118,12 @@ module PmvManager
         raise PmvManager::InvalidPageIndex
       end
       super(controle)
+    end
+    def resp_to_json(resp)
+      style = PmvManager::STYLES.key ([resp.unpack("C*")[4]].pack("C*"))
+      unpacked_resp = resp.unpack("C*")
+      msg = unpacked_resp[5..(unpacked_resp.length-4)].pack("C*")
+      { style: style, message: msg }
     end
   end
 
