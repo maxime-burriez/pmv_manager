@@ -99,6 +99,17 @@ module PmvManager
     end
   end
 
+  class GetRowsNumberCommand < ReadCommand
+    def initialize
+      super("C")
+    end
+    def resp_to_json(resp)
+      unpacked_resp = resp.unpack("C*")
+      n = unpacked_resp[4..(unpacked_resp.length-3)].pack("C*").to_i
+      { rows_number: n }
+    end
+  end
+
   class GetMessageCommand < ReadCommand
     def initialize options
       controle = "I"
