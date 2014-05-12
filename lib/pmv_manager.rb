@@ -7,7 +7,7 @@ module PmvManager
 
   PMV_DEFAULT_PORT = 10
   MAX_PACKET_SIZE  = 128 # 128 octets
-  RESPONSE_TIMEOUT = 2000
+  RESPONSE_TIMEOUT = 20000
   NAK              = "\x15\x15\x15\x15\x15" # false
   ACK              = "\x06\x06\x06\x06\x06" # true
   STX              = "\x02"
