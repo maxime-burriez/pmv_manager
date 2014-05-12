@@ -17,6 +17,7 @@ module PmvManager
 
   class Error               < StandardError; end
   class TimeoutError        < Error; end
+  class NetworkError        < Error; end
   class InvalidPacketSize   < Error; end
   class InvalidMode         < Error; end
   class InvalidPageDuration < Error; end
@@ -53,6 +54,8 @@ module PmvManager
         }
       rescue Timeout::Error
         raise PmvManager::TimeoutError
+      rescue Errno::ENETUNREACH
+        raise PmvManager::NetworkError
       end
       json_resp = resp_to_json(resp)
       puts json_resp
