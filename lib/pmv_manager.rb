@@ -58,6 +58,7 @@ module PmvManager
         raise PmvManager::NetworkError
       end
       json_resp = resp_to_json(resp)
+      socket.close
       puts json_resp
       json_resp
     end
