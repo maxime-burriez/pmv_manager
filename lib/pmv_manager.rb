@@ -7,7 +7,7 @@ module PmvManager
 
   PMV_DEFAULT_PORT = 10
   MAX_PACKET_SIZE  = 128 # 128 octets
-  RESPONSE_TIMEOUT = 20000
+  RESPONSE_TIMEOUT = 10000
   NAK              = "\x15\x15\x15\x15\x15" # false
   ACK              = "\x06\x06\x06\x06\x06" # true
   STX              = "\x02"
@@ -15,16 +15,17 @@ module PmvManager
   MODES            = { automatic: "0", force: "1", off: "2" }
   STYLES           = { normal: "0", blinking: "1", bold: "2" }
 
-  class Error               < StandardError; end
-  class TimeoutError        < Error; end
-  class NetworkError        < Error; end
-  class InvalidPacketSize   < Error; end
-  class InvalidMode         < Error; end
-  class InvalidPageDuration < Error; end
-  class InvalidMessageIndex < Error; end
-  class InvalidRowIndex     < Error; end
-  class InvalidPageIndex    < Error; end
-  class InvalidStyle        < Error; end
+  class Error                 < StandardError; end
+  class TimeoutError          < Error; end
+  class NetworkError          < Error; end
+  class InvalidPacketSize     < Error; end
+  class InvalidMode           < Error; end
+  class InvalidPageDuration   < Error; end
+  class InvalidMessageIndex   < Error; end
+  class InvalidRowIndex       < Error; end
+  class InvalidPageIndex      < Error; end
+  class InvalidStyle          < Error; end
+  class InvalidMessageContent < Error; end
 
   class Client
     attr_reader :pmv_address, :pmv_ip, :pmv_port
@@ -216,7 +217,11 @@ module PmvManager
       else
         raise PmvManager::InvalidStyle
       end
-      controle += options[:message] + "\x0D"
+      if (options[:message].match /^[[:alnum:]]*$/).nil?
+        raise PmvManager::InvalidMessageContent
+      else
+        controle += options[:message] + "\x0D"
+      end
       super(controle)
     end
   end
