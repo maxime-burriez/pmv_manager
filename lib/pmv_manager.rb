@@ -217,7 +217,7 @@ module PmvManager
       else
         raise PmvManager::InvalidStyle
       end
-      if (options[:message].match /^([[:alnum:]]| )*$/).nil?
+      if (options[:message].match /^([a-z]|[A-Z]|[0-9]| )*$/).nil?
         raise PmvManager::InvalidMessageContent
       else
         controle += options[:message] + "\x0D"
